@@ -1,10 +1,15 @@
 use anchor_lang::prelude::*;
 
-// TODO: Define the MarketCounter account struct.
-//
-// This is a global singleton PDA used to assign monotonically increasing
-// IDs to each new market, ensuring unique PDAs even if metadata is identical.
-//
-// Fields will include:
-//   - count: u64               — total markets ever created (next market's ID)
-//   - bump: u8                 — PDA bump seed
+// Global singleton PDA. Seeds: [b"market_counter"]
+#[account]
+pub struct MarketCounter {
+    pub count: u64,
+    pub bump: u8,
+}
+
+impl MarketCounter {
+    // 8  discriminator
+    // 8  count
+    // 1  bump
+    pub const LEN: usize = 17;
+}
