@@ -31,12 +31,7 @@ pub mod forge {
         market_type: u8,
     ) -> Result<()> {
         instructions::create_market::handler(
-            ctx,
-            description,
-            outcomes,
-            initial_b,
-            creator_fee_bps,
-            resolution_timestamp,
+            ctx, description, outcomes, initial_b, creator_fee_bps, resolution_timestamp,
             market_type,
         )
     }
@@ -57,5 +52,20 @@ pub mod forge {
         min_proceeds: u64,
     ) -> Result<()> {
         instructions::sell_shares::handler(ctx, outcome_idx, shares, min_proceeds)
+    }
+
+    pub fn resolve_market(
+        ctx: Context<ResolveMarket>,
+        winning_outcome: u8,
+    ) -> Result<()> {
+        instructions::resolve_market::handler(ctx, winning_outcome)
+    }
+
+    pub fn claim_winnings(ctx: Context<ClaimWinnings>) -> Result<()> {
+        instructions::claim_winnings::handler(ctx)
+    }
+
+    pub fn deposit_subsidy(ctx: Context<DepositSubsidy>, amount: u64) -> Result<()> {
+        instructions::deposit_subsidy::handler(ctx, amount)
     }
 }
