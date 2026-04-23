@@ -47,7 +47,7 @@ pub struct BuyShares<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(
+pub(crate) fn handler(
     ctx: Context<BuyShares>,
     outcome_idx: u8,
     shares: u64,

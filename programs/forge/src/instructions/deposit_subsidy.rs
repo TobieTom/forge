@@ -30,7 +30,7 @@ pub struct DepositSubsidy<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<DepositSubsidy>, amount: u64) -> Result<()> {
+pub(crate) fn handler(ctx: Context<DepositSubsidy>, amount: u64) -> Result<()> {
     // ── Validate ─────────────────────────────────────────────────────────────
     require!(!ctx.accounts.market.resolved, ErrorCode::MarketAlreadyResolved);
     require!(amount >= BOND_MIN_LAMPORTS, ErrorCode::InsufficientSubsidy);

@@ -24,7 +24,7 @@ pub struct ResolveMarket<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<ResolveMarket>, winning_outcome: u8) -> Result<()> {
+pub(crate) fn handler(ctx: Context<ResolveMarket>, winning_outcome: u8) -> Result<()> {
     // ── Validate ─────────────────────────────────────────────────────────────
     require!(
         ctx.accounts.authority.key() == ctx.accounts.market.authority,

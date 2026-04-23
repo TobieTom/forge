@@ -56,7 +56,7 @@ pub struct CreateMarket<'info> {
     pub rent: Sysvar<'info, Rent>,
 }
 
-pub fn handler(
+pub(crate) fn handler(
     ctx: Context<CreateMarket>,
     description: String,
     outcomes: Vec<String>,

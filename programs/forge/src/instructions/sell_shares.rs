@@ -43,7 +43,7 @@ pub struct SellShares<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(
+pub(crate) fn handler(
     ctx: Context<SellShares>,
     outcome_idx: u8,
     shares: u64,

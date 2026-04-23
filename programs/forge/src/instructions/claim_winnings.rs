@@ -37,7 +37,7 @@ pub struct ClaimWinnings<'info> {
     pub system_program: Program<'info, System>,
 }
 
-pub fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
+pub(crate) fn handler(ctx: Context<ClaimWinnings>) -> Result<()> {
     // ── Validate ─────────────────────────────────────────────────────────────
     require!(ctx.accounts.market.resolved, ErrorCode::MarketNotResolved);
     require!(!ctx.accounts.market.disputed, ErrorCode::MarketNotDisputed);
