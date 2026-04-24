@@ -61,7 +61,7 @@ export function MarketTile({ market, index }: { market: Market; index: number })
   return (
     <a
       ref={tileRef}
-      href={`#market-${id}`}
+      href={`/markets/market-${id}`}
       className="market-card"
       onMouseMove={handleMouseMove}
       style={{
