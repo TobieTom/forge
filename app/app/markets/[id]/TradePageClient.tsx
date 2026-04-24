@@ -308,7 +308,7 @@ function ActivityFeed({ yesPercent }: { yesPercent: number }) {
   const [trades, setTrades] = useState<TradeEntry[]>([]);
   const [now, setNow] = useState(Date.now());
   const counterRef = useRef(0);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const newTrade = useCallback((): TradeEntry => {
     const yesLead = yesPercent > 50;
