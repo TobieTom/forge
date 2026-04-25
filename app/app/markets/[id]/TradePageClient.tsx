@@ -4,8 +4,10 @@ import {
   useState, useEffect, useRef, useCallback, useMemo,
 } from 'react';
 import Link from 'next/link';
+import { useWallet, useConnection } from '@solana/wallet-adapter-react';
 import type { MarketData } from './page';
 import { playTick, playConfirm, playHover } from '../../../utils/sounds';
+import { mintTestUSDC, getUSDCBalance } from '../../../utils/faucet';
 
 /* ── constants ──────────────────────────────────────────────────── */
 const CAT_COLOR: Record<string, string> = {
@@ -465,13 +467,45 @@ function ParticleBurst({ active, color, burstKey }: { active: boolean; color: st
 
 /* ── trading panel ──────────────────────────────────────────────── */
 type TradeState = 'idle' | 'loading' | 'success';
+type FaucetState = 'idle' | 'minting' | 'success' | 'error';
 
 function TradingPanel({ market }: { market: MarketData }) {
+  const { connection } = useConnection();
+  const wallet = useWallet();
+
   const [outcome, setOutcome] = useState<'YES' | 'NO'>('YES');
   const [amount, setAmount] = useState('');
   const [tradeState, setTradeState] = useState<TradeState>('idle');
   const [burstKey, setBurstKey] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
+  const [balance, setBalance] = useState<number | null>(null);
+  const [faucetState, setFaucetState] = useState<FaucetState>('idle');
+  const [faucetError, setFaucetError] = useState('');
+
+  const fetchBalance = useCallback(async () => {
+    if (!wallet.publicKey) { setBalance(null); return; }
+    const b = await getUSDCBalance(connection, wallet.publicKey);
+    setBalance(b);
+  }, [connection, wallet.publicKey]);
+
+  useEffect(() => { fetchBalance(); }, [fetchBalance]);
+
+  const handleFaucet = async () => {
+    if (faucetState !== 'idle') return;
+    setFaucetState('minting');
+    setFaucetError('');
+    try {
+      await mintTestUSDC(connection, wallet);
+      setFaucetState('success');
+      await fetchBalance();
+      setTimeout(() => setFaucetState('idle'), 2000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Transaction failed';
+      setFaucetError(msg.length > 36 ? msg.slice(0, 33) + '...' : msg);
+      setFaucetState('error');
+      setTimeout(() => { setFaucetState('idle'); setFaucetError(''); }, 3000);
+    }
+  };
 
   const price = outcome === 'YES' ? market.yesPercent / 100 : market.noPercent / 100;
   const amt = parseFloat(amount) || 0;
@@ -512,11 +546,14 @@ function TradingPanel({ market }: { market: MarketData }) {
       top: 80,
     }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
         <span style={{ fontFamily: 'var(--font-display)', fontSize: 20, color: 'var(--white)', letterSpacing: '0.05em' }}>
           PLACE BET
         </span>
         <MiniArc yesPercent={market.yesPercent} />
+      </div>
+      <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.05em', marginBottom: 20 }}>
+        BALANCE: {balance === null ? '—' : `${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC`}
       </div>
 
       {/* Outcome selector */}
@@ -581,6 +618,47 @@ function TradingPanel({ market }: { market: MarketData }) {
           placeholder="0.00"
           min="0"
         />
+        {/* Faucet */}
+        <button
+          type="button"
+          onClick={handleFaucet}
+          disabled={faucetState !== 'idle' || !wallet.connected}
+          style={{
+            width: '100%', height: 36, marginTop: 8,
+            fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.05em',
+            background: faucetState === 'error' ? 'rgba(255,59,107,0.06)' : 'transparent',
+            color: faucetState === 'error' ? 'var(--red)' : '#FFB800',
+            border: `1px solid ${faucetState === 'error' ? 'rgba(255,59,107,0.3)' : 'rgba(245,166,35,0.3)'}`,
+            borderRadius: 6, cursor: faucetState === 'idle' && wallet.connected ? 'pointer' : 'default',
+            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+            transition: 'border-color 150ms ease, background 150ms ease',
+            opacity: !wallet.connected ? 0.4 : 1,
+          }}
+          onMouseEnter={e => {
+            if (faucetState === 'idle' && wallet.connected) {
+              (e.currentTarget as HTMLElement).style.borderColor = '#FFB800';
+              (e.currentTarget as HTMLElement).style.background = 'rgba(245,166,35,0.08)';
+            }
+          }}
+          onMouseLeave={e => {
+            (e.currentTarget as HTMLElement).style.borderColor = 'rgba(245,166,35,0.3)';
+            (e.currentTarget as HTMLElement).style.background = 'transparent';
+          }}
+        >
+          {faucetState === 'minting' ? (
+            <>
+              <span style={{ width: 10, height: 10, border: '1.5px solid rgba(255,184,0,0.3)', borderTopColor: '#FFB800', borderRadius: '50%', display: 'inline-block', animation: 'spin 700ms linear infinite' }} />
+              MINTING...
+            </>
+          ) : faucetState === 'success' ? (
+            '✓ 50,000 USDC ADDED'
+          ) : faucetState === 'error' ? (
+            faucetError || 'TRANSACTION FAILED'
+          ) : (
+            'GET 50K TEST USDC'
+          )}
+        </button>
+
         {/* Quick amounts */}
         <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
           {['10', '50', '100', '500'].map(v => (
