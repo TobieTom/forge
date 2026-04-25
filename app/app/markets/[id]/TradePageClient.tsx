@@ -466,7 +466,7 @@ function ParticleBurst({ active, color, burstKey }: { active: boolean; color: st
 }
 
 /* ── trading panel ──────────────────────────────────────────────── */
-type TradeState = 'idle' | 'loading' | 'success';
+type TradeState = 'idle' | 'loading' | 'success' | 'error';
 type FaucetState = 'idle' | 'minting' | 'success' | 'error';
 
 function TradingPanel({ market }: { market: MarketData }) {
@@ -476,6 +476,7 @@ function TradingPanel({ market }: { market: MarketData }) {
   const [outcome, setOutcome] = useState<'YES' | 'NO'>('YES');
   const [amount, setAmount] = useState('');
   const [tradeState, setTradeState] = useState<TradeState>('idle');
+  const [tradeError, setTradeError] = useState('');
   const [burstKey, setBurstKey] = useState(0);
   const [showBurst, setShowBurst] = useState(false);
   const [balance, setBalance] = useState<number | null>(null);
@@ -525,6 +526,13 @@ function TradingPanel({ market }: { market: MarketData }) {
 
   const handleTrade = () => {
     if (tradeState !== 'idle') return;
+    const numAmount = parseFloat(amount);
+    if (!amount || isNaN(numAmount) || numAmount <= 0) {
+      setTradeState('error');
+      setTradeError('Enter an amount first');
+      setTimeout(() => setTradeState('idle'), 2000);
+      return;
+    }
     setTradeState('loading');
     setTimeout(() => {
       setTradeState('success');
@@ -727,18 +735,23 @@ function TradingPanel({ market }: { market: MarketData }) {
             width: '100%', height: 52,
             background: tradeState === 'success'
               ? 'linear-gradient(135deg, #00FF87 0%, #00CC6A 100%)'
+              : tradeState === 'error'
+              ? 'linear-gradient(135deg, rgba(255,59,107,0.8) 0%, rgba(200,30,80,0.8) 100%)'
               : 'linear-gradient(135deg, var(--purple) 0%, var(--purple-bright) 100%)',
             color: 'white', border: 'none', borderRadius: 8,
             fontFamily: 'var(--font-display)', fontSize: 18, letterSpacing: '0.05em',
-            cursor: tradeState === 'idle' ? 'pointer' : 'default',
+            cursor: tradeState === 'idle' ? (amt > 0 ? 'pointer' : 'not-allowed') : 'default',
             boxShadow: tradeState === 'success'
               ? '0 0 30px rgba(0,255,135,0.4)'
+              : tradeState === 'error'
+              ? '0 0 20px rgba(255,59,107,0.3)'
               : '0 0 30px var(--purple-glow)',
-            transition: 'box-shadow 300ms ease, background 300ms ease, filter 200ms ease',
+            opacity: tradeState === 'idle' && amt <= 0 ? 0.5 : 1,
+            transition: 'box-shadow 300ms ease, background 300ms ease, filter 200ms ease, opacity 200ms ease',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}
           onMouseEnter={e => {
-            if (tradeState === 'idle')
+            if (tradeState === 'idle' && amt > 0)
               (e.currentTarget as HTMLElement).style.filter = 'brightness(1.15)';
           }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.filter = ''; }}
@@ -750,6 +763,8 @@ function TradingPanel({ market }: { market: MarketData }) {
             </>
           ) : tradeState === 'success' ? (
             '✓ BET PLACED'
+          ) : tradeState === 'error' ? (
+            tradeError
           ) : (
             `BUY ${outcome} →`
           )}

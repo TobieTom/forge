@@ -11,7 +11,7 @@ import {
   SolflareWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 
-const ENDPOINT = 'https://api.devnet.solana.com';
+const ENDPOINT = 'https://devnet.helius-rpc.com/?api-key=demo';
 
 export function WalletContextProvider({ children }: { children: ReactNode }) {
   const wallets = useMemo(
