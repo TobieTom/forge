@@ -11,7 +11,7 @@ import {
   SolflareWalletAdapter,
 } from '@solana/wallet-adapter-wallets';
 
-const ENDPOINT = 'https://devnet.helius-rpc.com/?api-key=demo';
+const ENDPOINT = 'https://api.devnet.solana.com';
 
 export function WalletContextProvider({ children }: { children: ReactNode }) {
   const wallets = useMemo(
@@ -20,7 +20,7 @@ export function WalletContextProvider({ children }: { children: ReactNode }) {
   );
 
   return (
-    <ConnectionProvider endpoint={ENDPOINT}>
+    <ConnectionProvider endpoint={ENDPOINT} config={{ commitment: 'confirmed' }}>
       <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>{children}</WalletModalProvider>
       </WalletProvider>
