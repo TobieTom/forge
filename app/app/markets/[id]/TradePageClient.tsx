@@ -489,7 +489,13 @@ function TradingPanel({ market }: { market: MarketData }) {
     setBalance(b);
   }, [connection, wallet.publicKey]);
 
-  useEffect(() => { fetchBalance(); }, [fetchBalance]);
+  useEffect(() => {
+    fetchBalance();
+    const interval = setInterval(() => {
+      if (wallet.publicKey) fetchBalance();
+    }, 10000);
+    return () => clearInterval(interval);
+  }, [fetchBalance, wallet.publicKey]);
 
   const handleFaucet = async () => {
     if (faucetState !== 'idle') return;
@@ -498,7 +504,7 @@ function TradingPanel({ market }: { market: MarketData }) {
     try {
       await mintTestUSDC(connection, wallet);
       setFaucetState('success');
-      await fetchBalance();
+      setTimeout(async () => { await fetchBalance(); }, 2000);
       setTimeout(() => setFaucetState('idle'), 2000);
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Transaction failed';
@@ -561,7 +567,7 @@ function TradingPanel({ market }: { market: MarketData }) {
         <MiniArc yesPercent={market.yesPercent} />
       </div>
       <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--text-3)', letterSpacing: '0.05em', marginBottom: 20 }}>
-        BALANCE: {balance === null ? '—' : `${balance.toLocaleString(undefined, { maximumFractionDigits: 2 })} USDC`}
+        BALANCE: {balance === null ? '—' : `${balance.toLocaleString('en-US', { maximumFractionDigits: 2 })} USDC`}
       </div>
 
       {/* Outcome selector */}

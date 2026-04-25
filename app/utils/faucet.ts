@@ -77,8 +77,8 @@ export async function getUSDCBalance(
   connection: Connection,
   walletPubkey: PublicKey,
 ): Promise<number> {
-  const ata = await getAssociatedTokenAddress(MOCK_USDC_MINT, walletPubkey);
   try {
+    const ata = await getAssociatedTokenAddress(MOCK_USDC_MINT, walletPubkey);
     const account = await getAccount(connection, ata);
     return Number(account.amount) / 1_000_000; // USDC has 6 decimals
   } catch {
